@@ -50,10 +50,28 @@ class OpenAIProvider(BaseLLMProvider):
         self.max_retries = max_retries
         self.retry_base_delay = retry_base_delay
 
+        resolved_key = api_key
+        resolved_base_url = base_url
+        if resolved_key is None or resolved_base_url is None:
+            try:
+                from backend.config import settings
+            except ImportError:
+                try:
+                    from config import settings
+                except ImportError:
+                    settings = None
+            if settings:
+                if resolved_key is None:
+                    resolved_key = settings.OPENAI_API_KEY or settings.OPENROUTER_API_KEY
+                if resolved_base_url is None:
+                    resolved_base_url = settings.OPENAI_BASE_URL
+                    if not resolved_base_url and resolved_key and resolved_key.startswith("sk-or-v1-"):
+                        resolved_base_url = "https://openrouter.ai/api/v1"
+
         # Initialize AsyncOpenAI client (supports base_url for compatible APIs)
         self.client = AsyncOpenAI(
-            api_key=api_key,
-            base_url=base_url,
+            api_key=resolved_key,
+            base_url=resolved_base_url,
             **client_kwargs,
         )
 
