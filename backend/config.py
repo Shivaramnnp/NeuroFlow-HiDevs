@@ -43,6 +43,10 @@ class Settings(BaseSettings):
     # OpenTelemetry / Jaeger configuration
     OTLP_ENDPOINT: str = Field(default="http://jaeger:4317", description="OpenTelemetry gRPC/HTTP OTLP exporter endpoint")
 
+    # LLM API Keys
+    OPENAI_API_KEY: Optional[str] = Field(default=None, description="OpenAI API Key")
+    ANTHROPIC_API_KEY: Optional[str] = Field(default=None, description="Anthropic API Key")
+
     @property
     def postgres_dsn(self) -> str:
         """Construct PostgreSQL asyncpg connection string."""
