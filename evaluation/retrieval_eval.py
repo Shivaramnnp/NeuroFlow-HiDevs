@@ -240,6 +240,22 @@ async def run_evaluation():
     rrf_hit_rate = rrf_hits / len(TEST_BENCHMARK)
     rrf_mrr = sum(rrf_rrs) / len(TEST_BENCHMARK)
 
+    # 3. HyDE Evaluation Comparison
+    hyde_hits = 0
+    hyde_rrs: List[float] = []
+    for test in TEST_BENCHMARK:
+        query = test["query"]
+        relevant_ids = set(test["relevant_chunk_ids"])
+        hyde_results = await retriever.retrieve(query, k=10, use_hyde=True, use_reranker=True)
+        h_hit = any(r.chunk_id in relevant_ids for r in hyde_results)
+        h_rank = next((i + 1 for i, r in enumerate(hyde_results) if r.chunk_id in relevant_ids), None)
+        if h_hit:
+            hyde_hits += 1
+        hyde_rrs.append((1.0 / h_rank) if h_rank is not None else 0.0)
+
+    hyde_hit_rate = hyde_hits / len(TEST_BENCHMARK)
+    hyde_mrr = sum(hyde_rrs) / len(TEST_BENCHMARK)
+
     summary = {
         "total_queries": len(TEST_BENCHMARK),
         "hit_rate": round(hit_rate, 4),
@@ -249,11 +265,12 @@ async def run_evaluation():
             "hit_rate_threshold": 0.75,
             "mrr_threshold": 0.55,
         },
-        "baselines": {
-            "rrf_only_hit_rate": round(rrf_hit_rate, 4),
-            "rrf_only_mrr": round(rrf_mrr, 4),
+        "comparisons": {
+            "hybrid_with_reranker": {"hit_rate": round(hit_rate, 4), "mrr": round(mrr, 4)},
+            "rrf_only_baseline": {"hit_rate": round(rrf_hit_rate, 4), "mrr": round(rrf_mrr, 4)},
+            "with_hyde": {"hit_rate": round(hyde_hit_rate, 4), "mrr": round(hyde_mrr, 4)},
             "cross_encoder_gain_mrr": round(mrr - rrf_mrr, 4),
-            "hyde_supported": True,
+            "hyde_hit_rate_gain": round(hyde_hit_rate - hit_rate, 4),
         },
         "queries": per_query_results,
     }
@@ -262,11 +279,17 @@ async def run_evaluation():
     with open(output_path, "w") as f:
         json.dump(summary, f, indent=2)
 
-    logger.info(f"Evaluation finished:")
-    logger.info(f"  -> Hit Rate: {hit_rate:.4f} (Target > 0.75)")
-    logger.info(f"  -> MRR:      {mrr:.4f} (Target > 0.55)")
-    logger.info(f"  -> Threshold met: {summary['threshold_met']}")
-    logger.info(f"Results written to {output_path}")
+    print("\n=======================================================")
+    print("           NEUROFLOW RETRIEVAL EVALUATION REPORT       ")
+    print("=======================================================")
+    print(f"Total Test Queries:        {len(TEST_BENCHMARK)}")
+    print(f"Hit Rate @ 10:             {hit_rate:.4f}  (Threshold > 0.75) -> {'PASS' if hit_rate > 0.75 else 'FAIL'}")
+    print(f"Mean Reciprocal Rank (MRR):{mrr:.4f}  (Threshold > 0.55) -> {'PASS' if mrr > 0.55 else 'FAIL'}")
+    print("-------------------------------------------------------")
+    print(f"RRF-only Baseline MRR:     {rrf_mrr:.4f}")
+    print(f"Cross-Encoder Reranked MRR:{mrr:.4f} (+{mrr - rrf_mrr:.4f})")
+    print(f"With HyDE Hit Rate:        {hyde_hit_rate:.4f}")
+    print("=======================================================\n")
 
     assert hit_rate > 0.75, f"Hit Rate {hit_rate} is below threshold 0.75"
     assert mrr > 0.55, f"MRR {mrr} is below threshold 0.55"

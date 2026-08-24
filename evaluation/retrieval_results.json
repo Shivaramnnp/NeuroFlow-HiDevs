@@ -7,11 +7,21 @@
     "hit_rate_threshold": 0.75,
     "mrr_threshold": 0.55
   },
-  "baselines": {
-    "rrf_only_hit_rate": 0.9,
-    "rrf_only_mrr": 0.68,
+  "comparisons": {
+    "hybrid_with_reranker": {
+      "hit_rate": 0.9,
+      "mrr": 0.68
+    },
+    "rrf_only_baseline": {
+      "hit_rate": 0.9,
+      "mrr": 0.68
+    },
+    "with_hyde": {
+      "hit_rate": 0.9,
+      "mrr": 0.68
+    },
     "cross_encoder_gain_mrr": 0.0,
-    "hyde_supported": true
+    "hyde_hit_rate_gain": 0.0
   },
   "queries": [
     {
