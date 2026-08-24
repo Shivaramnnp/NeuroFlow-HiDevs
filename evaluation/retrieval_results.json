@@ -1,0 +1,158 @@
+{
+  "total_queries": 20,
+  "hit_rate": 0.9,
+  "mrr": 0.68,
+  "threshold_met": true,
+  "quality_thresholds": {
+    "hit_rate_threshold": 0.75,
+    "mrr_threshold": 0.55
+  },
+  "baselines": {
+    "rrf_only_hit_rate": 0.9,
+    "rrf_only_mrr": 0.68,
+    "cross_encoder_gain_mrr": 0.0,
+    "hyde_supported": true
+  },
+  "queries": [
+    {
+      "query": "What is HNSW indexing in vector databases?",
+      "hit": true,
+      "rank": 1,
+      "reciprocal_rank": 1.0,
+      "top_result": "Hierarchical Navigable Small World (HNSW) is a graph-based index structure for a"
+    },
+    {
+      "query": "How does pgvector store cosine distance embeddings?",
+      "hit": true,
+      "rank": 1,
+      "reciprocal_rank": 1.0,
+      "top_result": "pgvector adds vector data types and operators such as <=> for cosine distance an"
+    },
+    {
+      "query": "What is Reciprocal Rank Fusion RRF formula?",
+      "hit": true,
+      "rank": 1,
+      "reciprocal_rank": 1.0,
+      "top_result": "Reciprocal Rank Fusion computes RRF score by summing 1 / (60 + rank) across mult"
+    },
+    {
+      "query": "Explain cross-encoder reranking vs bi-encoder",
+      "hit": true,
+      "rank": 4,
+      "reciprocal_rank": 0.25,
+      "top_result": "Hierarchical Navigable Small World (HNSW) is a graph-based index structure for a"
+    },
+    {
+      "query": "What are token limits for fixed-size chunking?",
+      "hit": false,
+      "rank": null,
+      "reciprocal_rank": 0.0,
+      "top_result": "Hierarchical Navigable Small World (HNSW) is a graph-based index structure for a"
+    },
+    {
+      "query": "How does semantic chunking detect topic shifts?",
+      "hit": true,
+      "rank": 1,
+      "reciprocal_rank": 1.0,
+      "top_result": "Semantic chunking embeds adjacent sentences and detects topic boundaries where c"
+    },
+    {
+      "query": "How does hierarchical chunking preserve parent child structure?",
+      "hit": true,
+      "rank": 1,
+      "reciprocal_rank": 1.0,
+      "top_result": "Hierarchical chunking creates parent chunks for top-level headers and links chil"
+    },
+    {
+      "query": "Show me documents from 2023 about climate change",
+      "hit": true,
+      "rank": 1,
+      "reciprocal_rank": 1.0,
+      "top_result": "Climate assessment report published in 2023 analyzing global surface temperature"
+    },
+    {
+      "query": "Explain query expansion techniques in RAG",
+      "hit": true,
+      "rank": 1,
+      "reciprocal_rank": 1.0,
+      "top_result": "Query expansion generates multi-perspective alternative phrasings to retrieve di"
+    },
+    {
+      "query": "What is HyDE hypothetical document embeddings?",
+      "hit": true,
+      "rank": 1,
+      "reciprocal_rank": 1.0,
+      "top_result": "HyDE prompts the LLM to write a hypothetical answer and embeds the generated tex"
+    },
+    {
+      "query": "How does PDF OCR fallback work for scanned pages?",
+      "hit": true,
+      "rank": 5,
+      "reciprocal_rank": 0.2,
+      "top_result": "Hierarchical Navigable Small World (HNSW) is a graph-based index structure for a"
+    },
+    {
+      "query": "How does SHA-256 deduplication prevent duplicate embeddings?",
+      "hit": true,
+      "rank": 1,
+      "reciprocal_rank": 1.0,
+      "top_result": "SHA-256 computes a content hash on raw file bytes, returning existing document I"
+    },
+    {
+      "query": "How are tables extracted from DOCX and PDF documents?",
+      "hit": true,
+      "rank": 1,
+      "reciprocal_rank": 1.0,
+      "top_result": "Tables are parsed using pdfplumber and python-docx and formatted as clean markdo"
+    },
+    {
+      "query": "What is the token budget for context assembly?",
+      "hit": true,
+      "rank": 1,
+      "reciprocal_rank": 1.0,
+      "top_result": "Context window assembler fits top retrieved passages within a 4000 token budget "
+    },
+    {
+      "query": "What is the role of MLflow in NeuroFlow?",
+      "hit": true,
+      "rank": 5,
+      "reciprocal_rank": 0.2,
+      "top_result": "Hierarchical Navigable Small World (HNSW) is a graph-based index structure for a"
+    },
+    {
+      "query": "How does Redis queue manage asynchronous background jobs?",
+      "hit": true,
+      "rank": 1,
+      "reciprocal_rank": 1.0,
+      "top_result": "FastAPI enqueues ingestion jobs to Redis queue:ingest using lpush, and backgroun"
+    },
+    {
+      "query": "What metrics are tracked in Prometheus and Grafana?",
+      "hit": true,
+      "rank": 4,
+      "reciprocal_rank": 0.25,
+      "top_result": "Climate assessment report published in 2023 analyzing global surface temperature"
+    },
+    {
+      "query": "How does model router handle vision queries?",
+      "hit": false,
+      "rank": null,
+      "reciprocal_rank": 0.0,
+      "top_result": "MLflow tracks fine-tuning experiments, parameters, validation loss, and evaluati"
+    },
+    {
+      "query": "What is the FallbackChain pattern in LLM clients?",
+      "hit": true,
+      "rank": 2,
+      "reciprocal_rank": 0.5,
+      "top_result": "HyDE prompts the LLM to write a hypothetical answer and embeds the generated tex"
+    },
+    {
+      "query": "How are RAG evaluations scored for faithfulness and relevance?",
+      "hit": true,
+      "rank": 5,
+      "reciprocal_rank": 0.2,
+      "top_result": "pgvector adds vector data types and operators such as <=> for cosine distance an"
+    }
+  ]
+}
