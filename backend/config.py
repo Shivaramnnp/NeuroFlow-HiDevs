@@ -45,6 +45,8 @@ class Settings(BaseSettings):
 
     # LLM API Keys
     OPENAI_API_KEY: Optional[str] = Field(default=None, description="OpenAI API Key")
+    OPENAI_BASE_URL: Optional[str] = Field(default=None, description="OpenAI API Base URL override (e.g. OpenRouter)")
+    OPENROUTER_API_KEY: Optional[str] = Field(default=None, description="OpenRouter API Key")
     ANTHROPIC_API_KEY: Optional[str] = Field(default=None, description="Anthropic API Key")
 
     @property

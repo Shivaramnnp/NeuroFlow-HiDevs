@@ -27,3 +27,4 @@ numpy
 python-multipart
 tabulate
 lxml_html_clean
+sentence-transformers
