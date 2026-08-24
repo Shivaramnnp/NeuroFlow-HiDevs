@@ -1,10 +1,16 @@
+from __future__ import annotations
+
 import logging
 import asyncio
 import redis.asyncio as redis
 import requests
 
-from config import settings
-from db.pool import get_pool
+try:
+    from config import settings
+    from db.pool import get_pool
+except ImportError:
+    from backend.config import settings
+    from backend.db.pool import get_pool
 
 logger = logging.getLogger(__name__)
 

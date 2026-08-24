@@ -1,7 +1,9 @@
 from functools import lru_cache
 from typing import Optional
 
+# pyrefly: ignore [missing-import]
 from pydantic import Field
+# pyrefly: ignore [missing-import]
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 

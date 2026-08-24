@@ -1,6 +1,12 @@
+from __future__ import annotations
+
 import logging
 import asyncpg
-from config import settings
+
+try:
+    from config import settings
+except ImportError:
+    from backend.config import settings
 
 logger = logging.getLogger(__name__)
 

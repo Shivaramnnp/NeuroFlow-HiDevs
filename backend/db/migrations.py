@@ -1,6 +1,12 @@
+from __future__ import annotations
+
 import os
 import logging
-from db.pool import get_pool
+
+try:
+    from db.pool import get_pool
+except ImportError:
+    from backend.db.pool import get_pool
 
 logger = logging.getLogger(__name__)
 

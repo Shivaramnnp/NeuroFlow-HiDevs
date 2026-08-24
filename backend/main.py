@@ -5,10 +5,18 @@ from fastapi import FastAPI, Response, status
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
 
-from config import settings
-from db.health import check_mlflow, check_postgres, check_redis
-from db.migrations import check_and_apply_migrations
-from db.pool import close_pool, init_pool
+try:
+    from config import settings
+    from db.health import check_mlflow, check_postgres, check_redis
+    from db.migrations import check_and_apply_migrations
+    from db.pool import close_pool, init_pool
+    from api.ingest import router as ingest_router
+except ImportError:
+    from backend.config import settings
+    from backend.db.health import check_mlflow, check_postgres, check_redis
+    from backend.db.migrations import check_and_apply_migrations
+    from backend.db.pool import close_pool, init_pool
+    from backend.api.ingest import router as ingest_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("neuroflow-api")
@@ -46,6 +54,9 @@ app = FastAPI(
 
 # Instrument FastAPI with OpenTelemetry
 FastAPIInstrumentor.instrument_app(app)
+
+# Include Ingestion Router
+app.include_router(ingest_router)
 
 
 @app.get("/health", status_code=status.HTTP_200_OK)
