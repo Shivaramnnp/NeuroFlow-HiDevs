@@ -1,0 +1,86 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": false,
+        "name": "Quality Anomaly Alert",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "title": "Rolling Evaluation Metrics (24h Avg)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "avg_over_time(neuroflow_eval_faithfulness[24h])",
+          "legendFormat": "Faithfulness",
+          "refId": "A"
+        },
+        {
+          "expr": "avg_over_time(neuroflow_eval_overall[24h])",
+          "legendFormat": "Overall Quality",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "title": "7-Day Overall Score Trend",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "neuroflow_eval_overall",
+          "legendFormat": "Overall Quality Score",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Documents Ingested Per Day",
+      "type": "bargauge",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "sum(increase(neuroflow_ingestion_docs_total[24h])) by (source_type)",
+          "legendFormat": "{{source_type}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Provider LLM Invocations",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "expr": "sum(rate(neuroflow_llm_calls_total[5m])) by (provider)",
+          "legendFormat": "{{provider}}",
+          "refId": "A"
+        }
+      ]
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["neuroflow", "rag", "quality", "evaluation"],
+  "time": {
+    "from": "now-7d",
+    "to": "now"
+  },
+  "title": "NeuroFlow Quality Monitor",
+  "uid": "neuroflow-quality-monitor",
+  "version": 1
+}

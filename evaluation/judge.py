@@ -85,14 +85,33 @@ class EvaluationJudge:
             span.set_attribute("run_id", str(active_run_id))
 
             if not self_consistency:
-                # 1. Parallel execution of all 4 metrics
-                f_task = evaluate_faithfulness(query, answer, context, client=self.client)
-                ar_task = evaluate_answer_relevance(query, answer, client=self.client)
-                cp_task = evaluate_context_precision(query, chunk_list, answer, client=self.client)
-                cr_task = evaluate_context_recall(query, chunk_list, answer, client=self.client)
+                # 1. Parallel execution of all 4 metrics with child spans
+                async def _eval_f():
+                    with tracer.start_as_current_span("evaluation.faithfulness") as s:
+                        res = await evaluate_faithfulness(query, answer, context, client=self.client)
+                        s.set_attribute("faithfulness", res)
+                        return res
+
+                async def _eval_ar():
+                    with tracer.start_as_current_span("evaluation.answer_relevance") as s:
+                        res = await evaluate_answer_relevance(query, answer, client=self.client)
+                        s.set_attribute("answer_relevance", res)
+                        return res
+
+                async def _eval_cp():
+                    with tracer.start_as_current_span("evaluation.context_precision") as s:
+                        res = await evaluate_context_precision(query, chunk_list, answer, client=self.client)
+                        s.set_attribute("context_precision", res)
+                        return res
+
+                async def _eval_cr():
+                    with tracer.start_as_current_span("evaluation.context_recall") as s:
+                        res = await evaluate_context_recall(query, chunk_list, answer, client=self.client)
+                        s.set_attribute("context_recall", res)
+                        return res
 
                 faithfulness, answer_relevance, context_precision, context_recall = await asyncio.gather(
-                    f_task, ar_task, cp_task, cr_task
+                    _eval_f(), _eval_ar(), _eval_cp(), _eval_cr()
                 )
 
                 # 2. Weighted overall score
@@ -137,6 +156,14 @@ class EvaluationJudge:
             span.set_attribute("overall_score", overall_score)
             span.set_attribute("judge_model", judge_model)
             span.set_attribute("latency_ms", latency_ms)
+
+            # Record Prometheus Evaluation Gauges
+            try:
+                from backend.monitoring.metrics import eval_faithfulness, eval_overall
+                eval_faithfulness.labels(pipeline_id="default").set(faithfulness)
+                eval_overall.labels(pipeline_id="default").set(overall_score)
+            except Exception:
+                pass
 
             # 3. Write evaluation record to PostgreSQL evaluations table
             eval_id = uuid.uuid4()

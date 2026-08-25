@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import time
 from typing import Any, Dict, List, Optional, Union
 
 import asyncpg
@@ -251,32 +252,85 @@ class HybridRetriever:
         3. RRF Fusion
         4. Cross-Encoder Reranking
         """
-        # 1. Query Analysis
-        processed = await self.query_processor.process(query, use_hyde=use_hyde)
+        start_time = time.perf_counter()
+        from opentelemetry import trace
+        tracer = trace.get_tracer("neuroflow-retriever")
 
-        # Dense queries: original + expansions (+ hyde doc if requested)
-        dense_queries = [processed.original_query] + processed.expanded_queries
-        if processed.hypothetical_document:
-            dense_queries.append(processed.hypothetical_document)
+        with tracer.start_as_current_span("retrieval.pipeline") as span:
+            span.set_attribute("query", query)
+            span.set_attribute("k", k)
 
-        # 2. Parallel Multi-Strategy Retrieval
-        dense_task = self._dense_retrieval(dense_queries, k=k)
-        sparse_task = self._sparse_retrieval(processed.original_query, k=k)
-        meta_task = self._metadata_retrieval(processed.original_query, filters=processed.metadata_filters, k=k)
+            # 1. Query Analysis
+            processed = await self.query_processor.process(query, use_hyde=use_hyde)
 
-        dense_res, sparse_res, meta_res = await asyncio.gather(
-            dense_task, sparse_task, meta_task
-        )
+            # Dense queries: original + expansions (+ hyde doc if requested)
+            dense_queries = [processed.original_query] + processed.expanded_queries
+            if processed.hypothetical_document:
+                dense_queries.append(processed.hypothetical_document)
 
-        # 3. Reciprocal Rank Fusion
-        fused = self._fuse([dense_res, sparse_res, meta_res])
+            # 2. Parallel Multi-Strategy Retrieval with Spans
+            async def _run_dense():
+                with tracer.start_as_current_span("retrieval.dense") as dspan:
+                    dstart = time.perf_counter()
+                    res = await self._dense_retrieval(dense_queries, k=k)
+                    dspan.set_attribute("results_count", len(res))
+                    try:
+                        from backend.monitoring.metrics import retrieval_latency
+                        retrieval_latency.labels(strategy="dense").observe(time.perf_counter() - dstart)
+                    except Exception:
+                        pass
+                    return res
 
-        # 4. Cross-Encoder Reranking
-        if use_reranker and fused:
-            reranked = await self.reranker.rerank(processed.original_query, fused, top_n=min(40, len(fused)))
-            return reranked[:k]
+            async def _run_sparse():
+                with tracer.start_as_current_span("retrieval.sparse") as sspan:
+                    sstart = time.perf_counter()
+                    res = await self._sparse_retrieval(processed.original_query, k=k)
+                    sspan.set_attribute("results_count", len(res))
+                    try:
+                        from backend.monitoring.metrics import retrieval_latency
+                        retrieval_latency.labels(strategy="sparse").observe(time.perf_counter() - sstart)
+                    except Exception:
+                        pass
+                    return res
 
-        return fused[:k]
+            async def _run_meta():
+                with tracer.start_as_current_span("retrieval.metadata") as mspan:
+                    res = await self._metadata_retrieval(processed.original_query, filters=processed.metadata_filters, k=k)
+                    mspan.set_attribute("results_count", len(res))
+                    return res
+
+            dense_res, sparse_res, meta_res = await asyncio.gather(
+                _run_dense(), _run_sparse(), _run_meta()
+            )
+
+            # 3. Reciprocal Rank Fusion with Span
+            with tracer.start_as_current_span("retrieval.fusion") as fspan:
+                fused = self._fuse([dense_res, sparse_res, meta_res])
+                fspan.set_attribute("fused_count", len(fused))
+
+            # 4. Cross-Encoder Reranking with Span
+            final_res = fused
+            if use_reranker and fused:
+                with tracer.start_as_current_span("retrieval.rerank") as rspan:
+                    rstart = time.perf_counter()
+                    reranked = await self.reranker.rerank(processed.original_query, fused, top_n=min(40, len(fused)))
+                    rspan.set_attribute("reranked_count", len(reranked))
+                    try:
+                        from backend.monitoring.metrics import retrieval_latency
+                        retrieval_latency.labels(strategy="cross_encoder").observe(time.perf_counter() - rstart)
+                    except Exception:
+                        pass
+                    final_res = reranked
+
+            total_lat = time.perf_counter() - start_time
+            span.set_attribute("total_latency_ms", int(total_lat * 1000))
+            try:
+                from backend.monitoring.metrics import retrieval_latency
+                retrieval_latency.labels(strategy="hybrid").observe(total_lat)
+            except Exception:
+                pass
+
+            return final_res[:k]
 
     async def retrieve_and_assemble(
         self,

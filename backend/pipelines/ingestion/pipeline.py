@@ -142,18 +142,22 @@ class IngestionPipeline:
             span.set_attribute("source_type", source_type)
 
             # Step 1: Extraction
-            extractor = self.get_extractor(source_type)
-            extracted_pages = await extractor.extract(source, client=self.client)
-            page_count = len(extracted_pages)
+            with tracer.start_as_current_span(f"ingestion.extract.{source_type}") as extract_span:
+                extractor = self.get_extractor(source_type)
+                extracted_pages = await extractor.extract(source, client=self.client)
+                page_count = len(extracted_pages)
+                extract_span.set_attribute("page_count", page_count)
             span.set_attribute("page_count", page_count)
 
             # Step 2: Auto-Chunking
-            chunks = await chunk_pages(
-                extracted_pages,
-                source_type=source_type,
-                client=self.client,
-            )
-            chunk_count = len(chunks)
+            with tracer.start_as_current_span("ingestion.chunk") as chunk_span:
+                chunks = await chunk_pages(
+                    extracted_pages,
+                    source_type=source_type,
+                    client=self.client,
+                )
+                chunk_count = len(chunks)
+                chunk_span.set_attribute("chunk_count", chunk_count)
             span.set_attribute("chunk_count", chunk_count)
 
             # Step 3: Embeddings
@@ -161,64 +165,77 @@ class IngestionPipeline:
             embeddings: List[List[float]] = []
             embedding_calls = 0
 
-            if chunk_texts:
-                embeddings = await self.client.embed(chunk_texts)
-                embedding_calls = (len(chunk_texts) + 99) // 100
+            with tracer.start_as_current_span("ingestion.embed") as embed_span:
+                if chunk_texts:
+                    embeddings = await self.client.embed(chunk_texts)
+                    embedding_calls = (len(chunk_texts) + 99) // 100
+                embed_span.set_attribute("embedding_calls", embedding_calls)
+                embed_span.set_attribute("chunks_embedded", len(chunk_texts))
 
             span.set_attribute("embedding_calls", embedding_calls)
 
             # Step 4: Persist chunks to PostgreSQL (pgvector)
             total_tokens = sum(c.token_count for c in chunks)
-            if pool is not None and chunks:
-                try:
-                    async with pool.acquire() as conn:
-                        async with conn.transaction():
-                            # Delete existing chunks if any
-                            await conn.execute(
-                                "DELETE FROM chunks WHERE document_id = $1;",
-                                uuid.UUID(document_id),
-                            )
-                            # Bulk insert chunks
-                            chunk_records = [
-                                (
-                                    uuid.UUID(document_id),
-                                    c.content,
-                                    str(embeddings[i]) if i < len(embeddings) else None,
-                                    c.chunk_index,
-                                    c.token_count,
-                                    json.dumps(c.metadata),
-                                )
-                                for i, c in enumerate(chunks)
-                            ]
-                            await conn.executemany(
-                                """
-                                INSERT INTO chunks (document_id, content, embedding, chunk_index, token_count, metadata)
-                                VALUES ($1, $2, $3, $4, $5, $6::jsonb);
-                                """,
-                                chunk_records,
-                            )
-                            # Update document status to complete
-                            await conn.execute(
-                                """
-                                UPDATE documents
-                                SET status = 'complete', chunk_count = $2
-                                WHERE id = $1;
-                                """,
-                                uuid.UUID(document_id),
-                                chunk_count,
-                            )
-                except Exception as err:
-                    logger.error(f"Failed to persist chunks to DB for document {document_id}: {err}")
-                    if pool is not None:
-                        try:
-                            async with pool.acquire() as conn:
+            with tracer.start_as_current_span("ingestion.write_db") as db_span:
+                db_span.set_attribute("document_id", document_id)
+                db_span.set_attribute("chunks_to_write", len(chunks))
+                if pool is not None and chunks:
+                    try:
+                        async with pool.acquire() as conn:
+                            async with conn.transaction():
+                                # Delete existing chunks if any
                                 await conn.execute(
-                                    "UPDATE documents SET status = 'failed' WHERE id = $1;",
+                                    "DELETE FROM chunks WHERE document_id = $1;",
                                     uuid.UUID(document_id),
                                 )
-                        except Exception:
-                            pass
-                    raise
+                                # Bulk insert chunks
+                                chunk_records = [
+                                    (
+                                        uuid.UUID(document_id),
+                                        c.content,
+                                        str(embeddings[i]) if i < len(embeddings) else None,
+                                        c.chunk_index,
+                                        c.token_count,
+                                        json.dumps(c.metadata),
+                                    )
+                                    for i, c in enumerate(chunks)
+                                ]
+                                await conn.executemany(
+                                    """
+                                    INSERT INTO chunks (document_id, content, embedding, chunk_index, token_count, metadata)
+                                    VALUES ($1, $2, $3, $4, $5, $6::jsonb);
+                                    """,
+                                    chunk_records,
+                                )
+                                # Update document status to complete
+                                await conn.execute(
+                                    """
+                                    UPDATE documents
+                                    SET status = 'complete', chunk_count = $2
+                                    WHERE id = $1;
+                                    """,
+                                    uuid.UUID(document_id),
+                                    chunk_count,
+                                )
+                    except Exception as err:
+                        logger.error(f"Failed to persist chunks to DB for document {document_id}: {err}")
+                        if pool is not None:
+                            try:
+                                async with pool.acquire() as conn:
+                                    await conn.execute(
+                                        "UPDATE documents SET status = 'failed' WHERE id = $1;",
+                                        uuid.UUID(document_id),
+                                    )
+                            except Exception:
+                                pass
+                        raise
+
+            # Record Prometheus metric
+            try:
+                from backend.monitoring.metrics import ingestion_docs_total
+                ingestion_docs_total.labels(source_type=source_type).inc()
+            except Exception:
+                pass
 
             duration_ms = (time.perf_counter() - start_time) * 1000.0
 

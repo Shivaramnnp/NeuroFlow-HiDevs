@@ -268,51 +268,77 @@ class RAGGenerator:
         enable_cot: bool = False,
         model: Optional[str] = None,
     ) -> Dict[str, Any]:
-        """Synchronous complete generation."""
-        active_run_id = run_id or uuid.uuid4()
-        chunk_ids = [s.get("chunk_id", "") for s in sources if s.get("chunk_id")]
+        """Synchronous complete generation with OpenTelemetry tracing."""
+        from opentelemetry import trace
+        tracer = trace.get_tracer("neuroflow-generator")
 
-        await self._log_run_start(active_run_id, pipeline_id, query, chunk_ids)
+        with tracer.start_as_current_span("generation.pipeline") as span:
+            active_run_id = run_id or uuid.uuid4()
+            span.set_attribute("run_id", str(active_run_id))
+            span.set_attribute("pipeline_id", str(pipeline_id) if pipeline_id else "default")
+            chunk_ids = [s.get("chunk_id", "") for s in sources if s.get("chunk_id")]
 
-        messages = self.prompt_builder.build_chat_messages(
-            query=query,
-            context=context,
-            query_type=query_type,
-            enable_cot=enable_cot,
-        )
+            with tracer.start_as_current_span("generation.log_run"):
+                await self._log_run_start(active_run_id, pipeline_id, query, chunk_ids)
 
-        input_tokens = sum(count_tokens(m.content if isinstance(m.content, str) else "") for m in messages)
-        start_time = time.perf_counter()
-        criteria = RoutingCriteria(task_type="rag_generation")
+            with tracer.start_as_current_span("generation.prompt_build") as pspan:
+                messages = self.prompt_builder.build_chat_messages(
+                    query=query,
+                    context=context,
+                    query_type=query_type,
+                    enable_cot=enable_cot,
+                )
+                pspan.set_attribute("message_count", len(messages))
 
-        res = await self.client.chat(messages, criteria=criteria, model=model)
-        latency_ms = int((time.perf_counter() - start_time) * 1000)
+            input_tokens = sum(count_tokens(m.content if isinstance(m.content, str) else "") for m in messages)
+            start_time = time.perf_counter()
+            criteria = RoutingCriteria(task_type="rag_generation")
 
-        raw_generation = res.content
-        clean_generation, thinking = strip_thinking(raw_generation)
-        output_tokens = res.output_tokens or count_tokens(raw_generation)
-        citations = self.citation_processor.parse_citations(clean_generation, sources)
-        model_used = res.model or model or "gpt-4o"
+            with tracer.start_as_current_span("generation.llm_call") as llm_span:
+                res = await self.client.chat(messages, criteria=criteria, model=model)
+                model_used = res.model or model or "gpt-4o"
+                llm_span.set_attribute("model", model_used)
+                llm_span.set_attribute("input_tokens", input_tokens)
 
-        await self._log_run_complete(
-            run_id=active_run_id,
-            generation=clean_generation,
-            input_tokens=input_tokens,
-            output_tokens=output_tokens,
-            model_used=model_used,
-            latency_ms=latency_ms,
-            metadata={"thinking": thinking} if thinking else None,
-        )
+            latency_ms = int((time.perf_counter() - start_time) * 1000)
 
-        self._enqueue_eval_job_async(active_run_id, query, clean_generation, sources)
+            raw_generation = res.content
+            clean_generation, thinking = strip_thinking(raw_generation)
+            output_tokens = res.output_tokens or count_tokens(raw_generation)
 
-        return {
-            "run_id": str(active_run_id),
-            "generation": clean_generation,
-            "citations": [c.to_dict() for c in citations],
-            "input_tokens": input_tokens,
-            "output_tokens": output_tokens,
-            "latency_ms": latency_ms,
-            "model_used": model_used,
-            "thinking": thinking,
-        }
+            with tracer.start_as_current_span("generation.citation_parse") as cit_span:
+                citations = self.citation_processor.parse_citations(clean_generation, sources)
+                cit_span.set_attribute("citations_count", len(citations))
+
+            with tracer.start_as_current_span("generation.log_run"):
+                await self._log_run_complete(
+                    run_id=active_run_id,
+                    generation=clean_generation,
+                    input_tokens=input_tokens,
+                    output_tokens=output_tokens,
+                    model_used=model_used,
+                    latency_ms=latency_ms,
+                    metadata={"thinking": thinking} if thinking else None,
+                )
+
+            # Record Prometheus Metrics
+            try:
+                from backend.monitoring.metrics import generation_latency, llm_cost, queries_total
+                generation_latency.labels(model=model_used).observe(latency_ms / 1000.0)
+                llm_cost.labels(model=model_used).observe(res.cost_usd or 0.001)
+                queries_total.labels(pipeline_id=str(pipeline_id) if pipeline_id else "default", status="complete").inc()
+            except Exception:
+                pass
+
+            self._enqueue_eval_job_async(active_run_id, query, clean_generation, sources)
+
+            return {
+                "run_id": str(active_run_id),
+                "generation": clean_generation,
+                "citations": [c.to_dict() for c in citations],
+                "input_tokens": input_tokens,
+                "output_tokens": output_tokens,
+                "latency_ms": latency_ms,
+                "model_used": model_used,
+                "thinking": thinking,
+            }

@@ -181,6 +181,11 @@ class CircuitBreaker:
                     await r.set(f"circuit:{self.name}:state", self.STATE_OPEN)
                     await r.set(f"circuit:{self.name}:opened_at", str(now))
                     logger.error(f"Circuit '{self.name}' OPENED after {count} consecutive failures! Error: {error}")
+                    try:
+                        from backend.monitoring.metrics import circuit_breaker_trips
+                        circuit_breaker_trips.labels(provider=self.name).inc()
+                    except Exception:
+                        pass
                 await r.aclose()
                 return
             except Exception as err:
@@ -193,6 +198,11 @@ class CircuitBreaker:
             data["state"] = self.STATE_OPEN
             data["opened_at"] = now
             logger.error(f"Circuit '{self.name}' OPENED in local fallback after {data['failure_count']} failures!")
+            try:
+                from backend.monitoring.metrics import circuit_breaker_trips
+                circuit_breaker_trips.labels(provider=self.name).inc()
+            except Exception:
+                pass
 
     @classmethod
     async def get_all_circuits_status(cls, redis_url: Optional[str] = None) -> Dict[str, Any]:

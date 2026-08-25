@@ -17,6 +17,7 @@ try:
     from api.compare import router as compare_router
     from api.finetune import router as finetune_router
     from api.evaluations import router as evaluations_router
+    import monitoring.metrics  # registers Prometheus metrics
 except ImportError:
     from backend.config import settings
     from backend.db.health import check_mlflow, check_postgres, check_redis
@@ -29,6 +30,7 @@ except ImportError:
     from backend.api.compare import router as compare_router
     from backend.api.finetune import router as finetune_router
     from backend.api.evaluations import router as evaluations_router
+    import backend.monitoring.metrics  # registers Prometheus metrics
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("neuroflow-api")
