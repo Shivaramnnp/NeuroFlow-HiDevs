@@ -179,9 +179,11 @@ class EvaluationJudge:
                 except Exception as err:
                     logger.warning(f"Failed to persist evaluation to database: {err}")
 
-            return {
+            eval_result_dict = {
                 "eval_id": str(eval_id),
                 "run_id": str(active_run_id),
+                "query": query,
+                "answer": answer,
                 "faithfulness": faithfulness,
                 "answer_relevance": answer_relevance,
                 "context_precision": context_precision,
@@ -189,6 +191,19 @@ class EvaluationJudge:
                 "overall_score": overall_score,
                 "judge_model": judge_model,
                 "latency_ms": latency_ms,
+                "evaluated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
                 "training_pair_extracted": overall_score > 0.8,
                 **variance_info,
             }
+
+            # 5. Broadcast to real-time Evaluation Feed via Redis Pub/Sub
+            try:
+                import redis.asyncio as aioredis
+                from backend.config import settings
+                r_client = aioredis.from_url(settings.redis_url, socket_timeout=1.5)
+                await r_client.publish("evaluations:new", json.dumps(eval_result_dict))
+                await r_client.aclose()
+            except Exception as pub_err:
+                logger.debug(f"Redis publish evaluations:new skipped/failed: {pub_err}")
+
+            return eval_result_dict
