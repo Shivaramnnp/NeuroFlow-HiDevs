@@ -1,0 +1,212 @@
+[
+  {
+    "id": 1,
+    "query": "What is HNSW indexing?",
+    "answer": "HNSW (Hierarchical Navigable Small World) is a graph-based structure providing logarithmic approximate nearest neighbor search.",
+    "context": "Hierarchical Navigable Small World (HNSW) is a multi-layer graph index for approximate nearest neighbor search with logarithmic complexity.",
+    "human_score": 1.0
+  },
+  {
+    "id": 2,
+    "query": "How does pgvector support cosine distance?",
+    "answer": "pgvector adds the <=> operator to compute cosine distance on stored embeddings.",
+    "context": "pgvector provides vector data types and the <=> operator to calculate cosine distance in Postgres queries.",
+    "human_score": 1.0
+  },
+  {
+    "id": 3,
+    "query": "What is Reciprocal Rank Fusion?",
+    "answer": "RRF combines multiple ranked lists by summing 1 / (60 + rank) for each chunk.",
+    "context": "Reciprocal Rank Fusion (RRF) sums 1 / (k + rank) with k=60 across multiple retrieval channels.",
+    "human_score": 1.0
+  },
+  {
+    "id": 4,
+    "query": "What are token limits for fixed-size chunks?",
+    "answer": "Fixed-size chunking uses 512 tokens with a 64-token overlap without cutting mid-sentence.",
+    "context": "Fixed size chunks are set to 512 tokens with 64-token overlap, respecting sentence boundaries within 10%.",
+    "human_score": 1.0
+  },
+  {
+    "id": 5,
+    "query": "How does semantic chunking split text?",
+    "answer": "Semantic chunking splits when cosine similarity between adjacent sentence embeddings falls below 0.7.",
+    "context": "Semantic chunking computes cosine similarity between adjacent sentence embeddings and creates boundaries where similarity drops below 0.7.",
+    "human_score": 1.0
+  },
+  {
+    "id": 6,
+    "query": "What does hierarchical chunking preserve?",
+    "answer": "Hierarchical chunking creates parent chunks for top headers and links sub-sections with parent_id metadata.",
+    "context": "Hierarchical chunking creates parent chunks for H1 headings and assigns parent_id metadata to child subsections.",
+    "human_score": 1.0
+  },
+  {
+    "id": 7,
+    "query": "How are scanned PDF pages handled?",
+    "answer": "If text length is under 50 characters, the page is rasterized and OCR is run using pytesseract.",
+    "context": "PDF extractor detects scanned pages with less than 50 extracted characters and triggers pytesseract OCR with --psm 6.",
+    "human_score": 1.0
+  },
+  {
+    "id": 8,
+    "query": "What is the token budget for context assembly?",
+    "answer": "Context assembly fits chunks within a 4000 token budget.",
+    "context": "Context window assembler packs retrieved chunks within a 4000 token limit without mid-sentence truncation.",
+    "human_score": 1.0
+  },
+  {
+    "id": 9,
+    "query": "What database holds vector embeddings in NeuroFlow?",
+    "answer": "NeuroFlow stores vector embeddings in PostgreSQL using the pgvector extension.",
+    "context": "Vector embeddings are persisted in the PostgreSQL chunks table enabled by pgvector.",
+    "human_score": 1.0
+  },
+  {
+    "id": 10,
+    "query": "How does query expansion work?",
+    "answer": "Query expansion generates 2 to 3 alternative phrasings of the original query.",
+    "context": "The query processor expands queries into 2-3 alternative perspectives to improve semantic retrieval coverage.",
+    "human_score": 1.0
+  },
+  {
+    "id": 11,
+    "query": "What is HyDE?",
+    "answer": "HyDE generates a hypothetical document answering the query and embeds that text.",
+    "context": "Hypothetical Document Embeddings (HyDE) prompts an LLM to hallucinate a domain answer and embeds that answer into vector space.",
+    "human_score": 1.0
+  },
+  {
+    "id": 12,
+    "query": "What is Cross-Encoder reranking?",
+    "answer": "Cross-encoders evaluate query and passage pairs jointly using full cross-attention.",
+    "context": "Cross-encoders take query-passage pairs and score relevance jointly, outperforming independent bi-encoders.",
+    "human_score": 1.0
+  },
+  {
+    "id": 13,
+    "query": "How does Redis queue manage ingestion?",
+    "answer": "FastAPI enqueues to queue:ingest and workers pull asynchronously with brpop.",
+    "context": "The API pushes jobs to Redis queue:ingest with lpush, while background workers consume tasks with brpop.",
+    "human_score": 1.0
+  },
+  {
+    "id": 14,
+    "query": "What port does MLflow run on?",
+    "answer": "MLflow runs on port 5000.",
+    "context": "The MLflow tracking server is configured on port 5000.",
+    "human_score": 1.0
+  },
+  {
+    "id": 15,
+    "query": "What format does SSE streaming use?",
+    "answer": "SSE streaming sends JSON event payloads with data prefixes.",
+    "context": "Server-Sent Events stream progressive token deltas and lifecycle events formatted as data: JSON.",
+    "human_score": 1.0
+  },
+  {
+    "id": 16,
+    "query": "What is HNSW indexing?",
+    "answer": "HNSW is a graph index for vector search, but it was invented by Apple in 1995 for iOS graphics.",
+    "context": "Hierarchical Navigable Small World (HNSW) is a multi-layer graph index for approximate nearest neighbor search.",
+    "human_score": 0.5
+  },
+  {
+    "id": 17,
+    "query": "How does pgvector support cosine distance?",
+    "answer": "pgvector adds the <=> operator, and also automatically translates SQL queries to JavaScript.",
+    "context": "pgvector provides vector data types and the <=> operator to calculate cosine distance in Postgres queries.",
+    "human_score": 0.5
+  },
+  {
+    "id": 18,
+    "query": "What is Reciprocal Rank Fusion?",
+    "answer": "RRF combines search results by summing 1 / (60 + rank), and automatically fine-tunes BERT models.",
+    "context": "Reciprocal Rank Fusion (RRF) sums 1 / (k + rank) with k=60 across multiple retrieval channels.",
+    "human_score": 0.5
+  },
+  {
+    "id": 19,
+    "query": "What are token limits for fixed-size chunks?",
+    "answer": "Fixed-size chunking uses 512 tokens, and automatically translates Spanish to German.",
+    "context": "Fixed size chunks are set to 512 tokens with 64-token overlap, respecting sentence boundaries.",
+    "human_score": 0.5
+  },
+  {
+    "id": 20,
+    "query": "How does semantic chunking split text?",
+    "answer": "Semantic chunking splits at 0.7 cosine similarity, and requires 100GB of GPU RAM per page.",
+    "context": "Semantic chunking computes cosine similarity between adjacent sentence embeddings and splits below 0.7.",
+    "human_score": 0.5
+  },
+  {
+    "id": 21,
+    "query": "How are scanned PDF pages handled?",
+    "answer": "PDF extractor checks if characters are under 50, and prints the document on physical paper.",
+    "context": "PDF extractor detects scanned pages with less than 50 extracted characters and triggers pytesseract OCR.",
+    "human_score": 0.5
+  },
+  {
+    "id": 22,
+    "query": "What is the token budget for context assembly?",
+    "answer": "Context assembly fits chunks within a 4000 token budget, and encrypts with Quantum RSA-4096.",
+    "context": "Context window assembler packs retrieved chunks within a 4000 token limit without mid-sentence truncation.",
+    "human_score": 0.5
+  },
+  {
+    "id": 23,
+    "query": "What is HyDE?",
+    "answer": "HyDE generates hypothetical answers, and reboots the Linux operating system on every search.",
+    "context": "Hypothetical Document Embeddings (HyDE) prompts an LLM to hallucinate a domain answer and embeds that answer.",
+    "human_score": 0.5
+  },
+  {
+    "id": 24,
+    "query": "What is Cross-Encoder reranking?",
+    "answer": "Cross-encoders score query-chunk pairs jointly, and mine Bitcoin during idle GPU cycles.",
+    "context": "Cross-encoders take query-passage pairs and score relevance jointly, outperforming independent bi-encoders.",
+    "human_score": 0.5
+  },
+  {
+    "id": 25,
+    "query": "What port does MLflow run on?",
+    "answer": "MLflow runs on port 5000, and is written in pure COBOL 74.",
+    "context": "The MLflow tracking server is configured on port 5000.",
+    "human_score": 0.5
+  },
+  {
+    "id": 26,
+    "query": "What is HNSW indexing?",
+    "answer": "HNSW is a deep sea submarine designed for underwater oil exploration in the Atlantic ocean.",
+    "context": "Hierarchical Navigable Small World (HNSW) is a multi-layer graph index for approximate nearest neighbor search.",
+    "human_score": 0.0
+  },
+  {
+    "id": 27,
+    "query": "How does pgvector support cosine distance?",
+    "answer": "pgvector is a recipe for baking gluten-free sourdough bread using almond flour.",
+    "context": "pgvector provides vector data types and the <=> operator to calculate cosine distance in Postgres queries.",
+    "human_score": 0.0
+  },
+  {
+    "id": 28,
+    "query": "What is Reciprocal Rank Fusion?",
+    "answer": "Reciprocal Rank Fusion is a nuclear fusion reactor located in Geneva Switzerland.",
+    "context": "Reciprocal Rank Fusion (RRF) sums 1 / (k + rank) with k=60 across multiple retrieval channels.",
+    "human_score": 0.0
+  },
+  {
+    "id": 29,
+    "query": "What are token limits for fixed-size chunks?",
+    "answer": "Token limits are financial regulations enforced by the European Central Bank on cryptocurrencies.",
+    "context": "Fixed size chunks are set to 512 tokens with 64-token overlap, respecting sentence boundaries.",
+    "human_score": 0.0
+  },
+  {
+    "id": 30,
+    "query": "How does semantic chunking split text?",
+    "answer": "Semantic chunking is a martial arts technique developed in 16th century Japan.",
+    "context": "Semantic chunking computes cosine similarity between adjacent sentence embeddings and splits below 0.7.",
+    "human_score": 0.0
+  }
+]

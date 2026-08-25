@@ -1,0 +1,219 @@
+{
+  "total_examples": 30,
+  "pearson_correlation": 0.9429,
+  "mean_absolute_error": 0.0333,
+  "target_correlation_threshold": 0.85,
+  "calibration_passed": true,
+  "results": [
+    {
+      "id": 1,
+      "query": "What is HNSW indexing?",
+      "human_score": 1.0,
+      "automated_score": 1.0,
+      "difference": 0.0
+    },
+    {
+      "id": 2,
+      "query": "How does pgvector support cosine distance?",
+      "human_score": 1.0,
+      "automated_score": 1.0,
+      "difference": 0.0
+    },
+    {
+      "id": 3,
+      "query": "What is Reciprocal Rank Fusion?",
+      "human_score": 1.0,
+      "automated_score": 1.0,
+      "difference": 0.0
+    },
+    {
+      "id": 4,
+      "query": "What are token limits for fixed-size chunks?",
+      "human_score": 1.0,
+      "automated_score": 1.0,
+      "difference": 0.0
+    },
+    {
+      "id": 5,
+      "query": "How does semantic chunking split text?",
+      "human_score": 1.0,
+      "automated_score": 1.0,
+      "difference": 0.0
+    },
+    {
+      "id": 6,
+      "query": "What does hierarchical chunking preserve?",
+      "human_score": 1.0,
+      "automated_score": 1.0,
+      "difference": 0.0
+    },
+    {
+      "id": 7,
+      "query": "How are scanned PDF pages handled?",
+      "human_score": 1.0,
+      "automated_score": 1.0,
+      "difference": 0.0
+    },
+    {
+      "id": 8,
+      "query": "What is the token budget for context assembly?",
+      "human_score": 1.0,
+      "automated_score": 1.0,
+      "difference": 0.0
+    },
+    {
+      "id": 9,
+      "query": "What database holds vector embeddings in NeuroFlow?",
+      "human_score": 1.0,
+      "automated_score": 0.5,
+      "difference": 0.5
+    },
+    {
+      "id": 10,
+      "query": "How does query expansion work?",
+      "human_score": 1.0,
+      "automated_score": 1.0,
+      "difference": 0.0
+    },
+    {
+      "id": 11,
+      "query": "What is HyDE?",
+      "human_score": 1.0,
+      "automated_score": 1.0,
+      "difference": 0.0
+    },
+    {
+      "id": 12,
+      "query": "What is Cross-Encoder reranking?",
+      "human_score": 1.0,
+      "automated_score": 0.5,
+      "difference": 0.5
+    },
+    {
+      "id": 13,
+      "query": "How does Redis queue manage ingestion?",
+      "human_score": 1.0,
+      "automated_score": 1.0,
+      "difference": 0.0
+    },
+    {
+      "id": 14,
+      "query": "What port does MLflow run on?",
+      "human_score": 1.0,
+      "automated_score": 1.0,
+      "difference": 0.0
+    },
+    {
+      "id": 15,
+      "query": "What format does SSE streaming use?",
+      "human_score": 1.0,
+      "automated_score": 1.0,
+      "difference": 0.0
+    },
+    {
+      "id": 16,
+      "query": "What is HNSW indexing?",
+      "human_score": 0.5,
+      "automated_score": 0.5,
+      "difference": 0.0
+    },
+    {
+      "id": 17,
+      "query": "How does pgvector support cosine distance?",
+      "human_score": 0.5,
+      "automated_score": 0.5,
+      "difference": 0.0
+    },
+    {
+      "id": 18,
+      "query": "What is Reciprocal Rank Fusion?",
+      "human_score": 0.5,
+      "automated_score": 0.5,
+      "difference": 0.0
+    },
+    {
+      "id": 19,
+      "query": "What are token limits for fixed-size chunks?",
+      "human_score": 0.5,
+      "automated_score": 0.5,
+      "difference": 0.0
+    },
+    {
+      "id": 20,
+      "query": "How does semantic chunking split text?",
+      "human_score": 0.5,
+      "automated_score": 0.5,
+      "difference": 0.0
+    },
+    {
+      "id": 21,
+      "query": "How are scanned PDF pages handled?",
+      "human_score": 0.5,
+      "automated_score": 0.5,
+      "difference": 0.0
+    },
+    {
+      "id": 22,
+      "query": "What is the token budget for context assembly?",
+      "human_score": 0.5,
+      "automated_score": 0.5,
+      "difference": 0.0
+    },
+    {
+      "id": 23,
+      "query": "What is HyDE?",
+      "human_score": 0.5,
+      "automated_score": 0.5,
+      "difference": 0.0
+    },
+    {
+      "id": 24,
+      "query": "What is Cross-Encoder reranking?",
+      "human_score": 0.5,
+      "automated_score": 0.5,
+      "difference": 0.0
+    },
+    {
+      "id": 25,
+      "query": "What port does MLflow run on?",
+      "human_score": 0.5,
+      "automated_score": 0.5,
+      "difference": 0.0
+    },
+    {
+      "id": 26,
+      "query": "What is HNSW indexing?",
+      "human_score": 0.0,
+      "automated_score": 0.0,
+      "difference": 0.0
+    },
+    {
+      "id": 27,
+      "query": "How does pgvector support cosine distance?",
+      "human_score": 0.0,
+      "automated_score": 0.0,
+      "difference": 0.0
+    },
+    {
+      "id": 28,
+      "query": "What is Reciprocal Rank Fusion?",
+      "human_score": 0.0,
+      "automated_score": 0.0,
+      "difference": 0.0
+    },
+    {
+      "id": 29,
+      "query": "What are token limits for fixed-size chunks?",
+      "human_score": 0.0,
+      "automated_score": 0.0,
+      "difference": 0.0
+    },
+    {
+      "id": 30,
+      "query": "How does semantic chunking split text?",
+      "human_score": 0.0,
+      "automated_score": 0.0,
+      "difference": 0.0
+    }
+  ]
+}
