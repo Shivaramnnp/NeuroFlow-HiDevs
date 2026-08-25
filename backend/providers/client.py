@@ -248,6 +248,27 @@ class NeuroFlowClient:
 
             return result
 
+    def stream(
+        self,
+        messages: List[ChatMessage],
+        criteria: Optional[RoutingCriteria] = None,
+        model: Optional[str] = None,
+        **kwargs,
+    ) -> AsyncGenerator[str, None]:
+        """Convenience streaming method."""
+        return self._stream_generator_wrapper(messages, criteria=criteria, model=model, **kwargs)
+
+    async def _stream_generator_wrapper(
+        self,
+        messages: List[ChatMessage],
+        criteria: Optional[RoutingCriteria] = None,
+        model: Optional[str] = None,
+        **kwargs,
+    ) -> AsyncGenerator[str, None]:
+        gen = await self.chat(messages, criteria=criteria, model=model, stream=True, **kwargs)
+        async for token in gen:
+            yield token
+
     async def _stream_with_telemetry(
         self,
         candidates: List[ModelConfig],

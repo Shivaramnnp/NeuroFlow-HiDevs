@@ -11,12 +11,14 @@ try:
     from db.migrations import check_and_apply_migrations
     from db.pool import close_pool, init_pool
     from api.ingest import router as ingest_router
+    from api.query import router as query_router
 except ImportError:
     from backend.config import settings
     from backend.db.health import check_mlflow, check_postgres, check_redis
     from backend.db.migrations import check_and_apply_migrations
     from backend.db.pool import close_pool, init_pool
     from backend.api.ingest import router as ingest_router
+    from backend.api.query import router as query_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("neuroflow-api")
@@ -55,8 +57,9 @@ app = FastAPI(
 # Instrument FastAPI with OpenTelemetry
 FastAPIInstrumentor.instrument_app(app)
 
-# Include Ingestion Router
+# Include Routers
 app.include_router(ingest_router)
+app.include_router(query_router)
 
 
 @app.get("/health", status_code=status.HTTP_200_OK)

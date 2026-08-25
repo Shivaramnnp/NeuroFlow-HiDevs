@@ -28,3 +28,4 @@ python-multipart
 tabulate
 lxml_html_clean
 sentence-transformers
+sse-starlette
