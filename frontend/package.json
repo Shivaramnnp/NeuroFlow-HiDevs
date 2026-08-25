@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@monaco-editor/react": "^4.7.0",
     "@tanstack/react-query": "^5.102.3",
     "@xyflow/react": "^12.11.3",
     "axios": "^1.19.0",
