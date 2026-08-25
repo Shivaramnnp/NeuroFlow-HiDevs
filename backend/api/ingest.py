@@ -16,10 +16,14 @@ try:
     from backend.config import settings
     from backend.db.pool import get_pool
     from backend.pipelines.ingestion.pipeline import compute_content_hash, check_deduplication
+    from backend.resilience.backpressure import BackpressureManager
+    from backend.resilience.rate_limiter import rate_limit_ingest
 except ImportError:
     from config import settings
     from db.pool import get_pool
     from pipelines.ingestion.pipeline import compute_content_hash, check_deduplication
+    from resilience.backpressure import BackpressureManager
+    from resilience.rate_limiter import rate_limit_ingest
 
 logger = logging.getLogger("neuroflow-ingest-api")
 
@@ -116,6 +120,12 @@ async def ingest_document(
     - Checks deduplication: if file hash already exists, returns existing document ID with duplicate=true.
     - If new: creates document with status='queued', enqueues to Redis queue:ingest, and returns immediately.
     """
+    # 1. Rate Limiting Check
+    await rate_limit_ingest(request)
+
+    # 2. Backpressure Check
+    has_warning, warning_info = await BackpressureManager.check_ingestion_backpressure()
+
     pool = None
     try:
         pool = get_pool()

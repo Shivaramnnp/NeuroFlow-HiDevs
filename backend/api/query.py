@@ -18,6 +18,8 @@ try:
     from backend.pipelines.retrieval.query_processor import QueryProcessor
     from backend.pipelines.retrieval.retriever import HybridRetriever
     from backend.providers.client import NeuroFlowClient
+    from backend.resilience.rate_limiter import rate_limit_query
+    from backend.resilience.timeouts import TimeoutManager
 except ImportError:
     from db.pool import get_pool
     from pipelines.generation.generator import RAGGenerator
@@ -25,6 +27,8 @@ except ImportError:
     from pipelines.retrieval.query_processor import QueryProcessor
     from pipelines.retrieval.retriever import HybridRetriever
     from providers.client import NeuroFlowClient
+    from resilience.rate_limiter import rate_limit_query
+    from resilience.timeouts import TimeoutManager
 
 logger = logging.getLogger("neuroflow-query-api")
 
@@ -57,12 +61,14 @@ class QueryResponse(BaseModel):
 
 
 @router.post("", response_model=QueryResponse, status_code=status.HTTP_200_OK)
-async def query_pipeline(request: QueryRequest):
+async def query_pipeline(http_request: Request, request: QueryRequest):
     """
     Execute end-to-end RAG query:
     - If stream=false: executes retrieval, context assembly, generation, and returns complete JSON response.
     - If stream=true: initializes run_id, registers streaming session, and returns stream_url.
     """
+    await rate_limit_query(http_request)
+
     run_id = uuid.uuid4()
     run_id_str = str(run_id)
 

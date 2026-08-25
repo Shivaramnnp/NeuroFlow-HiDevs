@@ -77,24 +77,18 @@ app.include_router(finetune_router)
 @app.get("/health", status_code=status.HTTP_200_OK)
 async def health_check(response: Response):
     """
-    Health check endpoint verifying PostgreSQL, Redis, and MLflow connectivity.
+    Enhanced health check endpoint reporting PostgreSQL, Redis, MLflow,
+    Circuit Breakers, and Ingestion Queue Depth status.
     """
-    pg_ok = await check_postgres()
-    redis_ok = await check_redis()
-    mlflow_ok = await check_mlflow()
+    try:
+        from db.health import get_comprehensive_health
+    except ImportError:
+        from backend.db.health import get_comprehensive_health
 
-    all_healthy = pg_ok and redis_ok and mlflow_ok
-    if not all_healthy:
+    data = await get_comprehensive_health()
+    if data["status"] == "critical":
         response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
-
-    return {
-        "status": "ok" if all_healthy else "degraded",
-        "checks": {
-            "postgres": pg_ok,
-            "redis": redis_ok,
-            "mlflow": mlflow_ok,
-        },
-    }
+    return data
 
 
 @app.get("/metrics")

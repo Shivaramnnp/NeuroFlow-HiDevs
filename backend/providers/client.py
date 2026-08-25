@@ -22,6 +22,13 @@ from .base import BaseLLMProvider, ChatMessage, GenerationResult
 from .openai_provider import OpenAIProvider
 from .router import ModelConfig, ModelRouter, RoutingCriteria
 
+try:
+    from backend.resilience.circuit_breaker import circuit_breaker_guard
+    from backend.resilience.timeouts import TimeoutManager
+except ImportError:
+    from resilience.circuit_breaker import circuit_breaker_guard
+    from resilience.timeouts import TimeoutManager
+
 logger = logging.getLogger("neuroflow-client")
 tracer = trace.get_tracer("neuroflow-client")
 
@@ -30,10 +37,12 @@ class FallbackChain:
     """
     Executes completion and streaming across an ordered sequence of candidate models/providers.
     If the primary provider fails, automatically falls back to subsequent candidates in the chain.
+    Protected by CircuitBreaker and TimeoutManager resilience guards.
     """
 
     def __init__(self, client: "NeuroFlowClient"):
         self.client = client
+        self.timeout_manager = TimeoutManager()
 
     async def complete(
         self,
@@ -49,8 +58,12 @@ class FallbackChain:
 
             try:
                 logger.info(f"Attempting completion via {config.provider} ({config.model})...")
-                result = await provider.complete(messages, model=config.model, **kwargs)
-                return result
+                async with circuit_breaker_guard(config.provider):
+                    result = await self.timeout_manager.run_with_timeout(
+                        provider.complete(messages, model=config.model, **kwargs),
+                        task_type="chat_completion",
+                    )
+                    return result
             except Exception as exc:
                 logger.warning(
                     f"Candidate model '{config.model}' ({config.provider}) failed: {exc}. Trying next fallback..."
