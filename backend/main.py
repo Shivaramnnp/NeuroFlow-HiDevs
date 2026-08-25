@@ -13,6 +13,8 @@ try:
     from api.ingest import router as ingest_router
     from api.query import router as query_router
     from api.ratings import router as ratings_router
+    from api.pipelines import router as pipelines_router
+    from api.compare import router as compare_router
 except ImportError:
     from backend.config import settings
     from backend.db.health import check_mlflow, check_postgres, check_redis
@@ -21,6 +23,8 @@ except ImportError:
     from backend.api.ingest import router as ingest_router
     from backend.api.query import router as query_router
     from backend.api.ratings import router as ratings_router
+    from backend.api.pipelines import router as pipelines_router
+    from backend.api.compare import router as compare_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("neuroflow-api")
@@ -63,6 +67,8 @@ FastAPIInstrumentor.instrument_app(app)
 app.include_router(ingest_router)
 app.include_router(query_router)
 app.include_router(ratings_router)
+app.include_router(pipelines_router)
+app.include_router(compare_router)
 
 
 @app.get("/health", status_code=status.HTTP_200_OK)

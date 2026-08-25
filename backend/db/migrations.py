@@ -38,3 +38,25 @@ async def check_and_apply_migrations() -> None:
                 logger.warning(f"Schema file not found at {schema_path}")
         else:
             logger.info("Database schema verified.")
+
+        # Apply schema upgrades for Task 38 if not present
+        await conn.execute(
+            """
+            ALTER TABLE pipelines ADD COLUMN IF NOT EXISTS description TEXT;
+            ALTER TABLE pipelines ADD COLUMN IF NOT EXISTS version INT NOT NULL DEFAULT 1;
+            ALTER TABLE pipelines ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'active';
+            ALTER TABLE pipelines ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+
+            CREATE TABLE IF NOT EXISTS pipeline_versions (
+                id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                pipeline_id UUID NOT NULL REFERENCES pipelines(id),
+                version INT NOT NULL,
+                config JSONB NOT NULL,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                UNIQUE(pipeline_id, version)
+            );
+
+            ALTER TABLE pipeline_runs ADD COLUMN IF NOT EXISTS pipeline_version INT NOT NULL DEFAULT 1;
+            ALTER TABLE pipeline_runs ADD COLUMN IF NOT EXISTS retrieval_latency_ms INT;
+            """
+        )
